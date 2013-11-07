@@ -1,0 +1,38 @@
+#!/bin/bash
+
+free=`free -m | awk 'NR==2' | awk '{print $4}'`
+if [ $free -le 200 ]
+	then
+		sync && echo 3 > /proc/sys/vm/drop_caches
+		 echo "$(date):freemem for only ${free}MB" >> /home/wwwlogs/freemem.log
+	fi
+
+logpath="/data/wwwlogs/bash"
+chkurl="http://www.domain.com/live.php"
+
+PHPCNT=`ps -efww | grep php-fpm | grep -v "grep" | wc -l`
+if [ $PHPCNT -lt 1 ]
+then
+service php-fpm restart
+echo "$(date) - php has reboot" >> $logpath/reboot.log
+fi
+poutput="$(date): php check done;"
+
+NGINXCNT=`ps -efww | grep nginx | grep -v "grep" | wc -l`
+if [ $NGINXCNT -lt 1 ]
+then
+service nginx restart
+echo "$(date) - nginx has reboot" >> $logpath/reboot.log
+fi
+poutput+="nginx check done;"
+
+WWWCNT=`curl -IG -m 45 $chkurl | grep 200 | wc -l`
+if [ $WWWCNT -lt 1 ]
+then
+service php-fpm restart
+service nginx restart
+echo "$(date) - www has reboot" >> $logpath/reboot.log
+fi
+poutput+="www check done"
+poutput+=$'\n'
+echo $poutput >> $logpath/checked.log
