@@ -1,0 +1,12 @@
+#!/bin/bash
+backup_dir=/usr/local/mysql/var
+target_dir=/home/wwwroot/default/bak
+db=test
+DATE=$(date +%Y%m%d)
+ccDATE=$(date "-d 10 day ago" +%Y%m%d)
+rm -rf $target_dir/$db
+cp -R $backup_dir/$db $target_dir/
+tar -zcpPf $target_dir/$db$DATE.tar.gz $target_dir/$db/
+rm -rf $target_dir/$db$ccDATE.tar.gz
+
+
